@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مؤسسة الشهداء ميسان - قسم الأراضي والعقارات</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo-section">
+                <div class="logo">🏛️</div>
+                <div class="header-text">
+                    <h1>مؤسسة الشهداء ميسان</h1>
+                    <h2>قسم الأراضي والعقارات</h2>
+                </div>
+            </div>
+        </header>
+
+        <!-- Search Section -->
+        <section class="search-section">
+            <div class="search-container">
+                <h3>البحث في قاعدة البيانات</h3>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="ابحث عن اسم المستفيد...">
+                    <button onclick="searchRecords()">🔍 بحث</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section class="results-section" id="resultsSection" style="display: none;">
+            <h3>نتائج البحث</h3>
+            <div id="searchResults"></div>
+        </section>
+
+        <!-- Add New Record Section -->
+        <section class="add-section">
+            <div class="section-header">
+                <h3>إضافة سجل جديد</h3>
+                <button class="btn-primary" onclick="addNewForm()">➕ إضافة استمارة أخرى</button>
+            </div>
+            
+            <div id="formsContainer">
+                <div class="form-card">
+                    <div class="form-header">
+                        <h4>استمارة رقم 1</h4>
+                        <button class="btn-danger" onclick="removeForm(this)" style="display: none;">❌ حذف</button>
+                    </div>
+                    
+                    <form class="record-form">
+                        <div class="form-group">
+                            <label for="name">الاسم الثلاثي:</label>
+                            <input type="text" name="name" placeholder="مثال: محمد علي محمد" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="status">حالة الاستلام:</label>
+                            <select name="status" required>
+                                <option value="">اختر الحالة</option>
+                                <option value="لم يستلم">لم يستلم قطعة أرض</option>
+                                <option value="استلم">استلم قطعة أرض</option>
+                                <option value="قيد المراجعة">قيد المراجعة</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="submitDate">تاريخ التقديم:</label>
+                            <input type="date" name="submitDate" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="decisionNumber">رقم القرار:</label>
+                            <input type="text" name="decisionNumber" placeholder="رقم القرار الإداري" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="martyrName">اسم الشهيد:</label>
+                            <input type="text" name="martyrName" placeholder="اسم الشهيد المرتبط بالطلب" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="notes">ملاحظات إضافية:</label>
+                            <textarea name="notes" placeholder="أي ملاحظات أخرى..." rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button class="btn-success" onclick="saveAllRecords()">💾 حفظ جميع السجلات</button>
+                <button class="btn-secondary" onclick="clearAllForms()">🗑️ مسح الكل</button>
+            </div>
+        </section>
+
+        <!-- Records Display Section -->
+        <section class="records-section">
+            <div class="section-header">
+                <h3>السجلات المحفوظة</h3>
+                <button class="btn-info" onclick="exportRecords()">📥 تصدير البيانات</button>
+            </div>
+            <div id="recordsDisplay"></div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2025 مؤسسة الشهداء ميسان - قسم الأراضي والعقارات</p>
+        <p>جميع الحقوق محفوظة</p>
+    </footer>
+
+    <script>
+        let formCounter = 1;
+        let records = [];
+
+        // Load saved records on page load
+        window.onload = function() {
+            loadRecords();
+            displayRecords();
+        };
+
+        function addNewForm() {
+            formCounter++;
+            const formsContainer = document.getElementById('formsContainer');
+            
+            const formCard = document.createElement('div');
+            formCard.className = 'form-card';
+            formCard.innerHTML = `
+                <div class="form-header">
+                    <h4>استمارة رقم ${formCounter}</h4>
+                    <button class="btn-danger" onclick="removeForm(this)">❌ حذف</button>
+                </div>
+                
+                <form class="record-form">
+                    <div class="form-group">
+                        <label for="name">الاسم الثلاثي:</label>
+                        <input type="text" name="name" placeholder="مثال: محمد علي محمد" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="status">حالة الاستلام:</label>
+                        <select name="status" required>
+                            <option value="">اختر الحالة</option>
+                            <option value="لم يستلم">لم يستلم قطعة أرض</option>
+                            <option value="استلم">استلم قطعة أرض</option>
+                            <option value="قيد المراجعة">قيد المراجعة</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="submitDate">تاريخ التقديم:</label>
+                        <input type="date" name="submitDate" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="decisionNumber">رقم القرار:</label>
+                        <input type="text" name="decisionNumber" placeholder="رقم القرار الإداري" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="martyrName">اسم الشهيد:</label>
+                        <input type="text" name="martyrName" placeholder="اسم الشهيد المرتبط بالطلب" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="notes">ملاحظات إضافية:</label>
+                        <textarea name="notes" placeholder="أي ملاحظات أخرى..." rows="3"></textarea>
+                    </div>
+                </form>
+            `;
+            
+            formsContainer.appendChild(formCard);
+            
+            // Show delete button for all forms except the first one
+            updateDeleteButtons();
+        }
+
+        function removeForm(button) {
+            const formCard = button.closest('.form-card');
+            formCard.remove();
+            updateFormNumbers();
+            updateDeleteButtons();
+        }
+
+        function updateFormNumbers() {
+            const formCards = document.querySelectorAll('.form-card');
+            formCards.forEach((card, index) => {
+                const header = card.querySelector('h4');
+                header.textContent = `استمارة رقم ${index + 1}`;
+            });
+            formCounter = formCards.length;
+        }
+
+        function updateDeleteButtons() {
+            const deleteButtons = document.querySelectorAll('.btn-danger');
+            deleteButtons.forEach((button, index) => {
+                button.style.display = index === 0 && deleteButtons.length === 1 ? 'none' : 'inline-block';
+            });
+        }
+
+        function saveAllRecords() {
+            const forms = document.querySelectorAll('.record-form');
+            let newRecords = [];
+            
+            forms.forEach((form, index) => {
+                const formData = new FormData(form);
+                const record = {
+                    id: Date.now() + index,
+                    name: formData.get('name'),
+                    status: formData.get('status'),
+                    submitDate: formData.get('submitDate'),
+                    decisionNumber: formData.get('decisionNumber'),
+                    martyrName: formData.get('martyrName'),
+                    notes: formData.get('notes'),
+                    createdAt: new Date().toLocaleString('ar-IQ')
+                };
+                
+                if (record.name && record.status && record.submitDate && record.decisionNumber && record.martyrName) {
+                    newRecords.push(record);
+                }
+            });
+            
+            if (newRecords.length > 0) {
+                records.push(...newRecords);
+                saveRecords();
+                displayRecords();
+                clearAllForms();
+                alert(`تم حفظ ${newRecords.length} سجل بنجاح!`);
+            } else {
+                alert('يرجى ملء جميع الحقول المطلوبة!');
+            }
+        }
+
+        function clearAllForms() {
+            document.getElementById('formsContainer').innerHTML = `
+                <div class="form-card">
+                    <div class="form-header">
+                        <h4>استمارة رقم 1</h4>
+                        <button class="btn-danger" onclick="removeForm(this)" style="display: none;">❌ حذف</button>
+                    </div>
+                    
+                    <form class="record-form">
+                        <div class="form-group">
+                            <label for="name">الاسم الثلاثي:</label>
+                            <input type="text" name="name" placeholder="مثال: محمد علي محمد" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="status">حالة الاستلام:</label>
+                            <select name="status" required>
+                                <option value="">اختر الحالة</option>
+                                <option value="لم يستلم">لم يستلم قطعة أرض</option>
+                                <option value="استلم">استلم قطعة أرض</option>
+                                <option value="قيد المراجعة">قيد المراجعة</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="submitDate">تاريخ التقديم:</label>
+                            <input type="date" name="submitDate" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="decisionNumber">رقم القرار:</label>
+                            <input type="text" name="decisionNumber" placeholder="رقم القرار الإداري" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="martyrName">اسم الشهيد:</label>
+                            <input type="text" name="martyrName" placeholder="اسم الشهيد المرتبط بالطلب" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="notes">ملاحظات إضافية:</label>
+                            <textarea name="notes" placeholder="أي ملاحظات أخرى..." rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+            `;
+            formCounter = 1;
+        }
+
+        function searchRecords() {
+            const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
+            const resultsSection = document.getElementById('resultsSection');
+            const searchResults = document.getElementById('searchResults');
+            
+            if (!searchTerm) {
+                resultsSection.style.display = 'none';
+                return;
+            }
+            
+            const filteredRecords = records.filter(record => 
+                record.name.toLowerCase().includes(searchTerm) ||
+                record.martyrName.toLowerCase().includes(searchTerm) ||
+                record.decisionNumber.toLowerCase().includes(searchTerm)
+            );
+            
+            if (filteredRecords.length > 0) {
+                searchResults.innerHTML = filteredRecords.map(record => `
+                    <div class="record-item">
+                        <div class="record-header">
+                            <h4>${record.name}</h4>
+                            <span class="status-badge status-${record.status.replace(' ', '-')}">${record.status}</span>
+                        </div>
+                        <div class="record-details">
+                            <p><strong>تاريخ التقديم:</strong> ${record.submitDate}</p>
+                            <p><strong>رقم القرار:</strong> ${record.decisionNumber}</p>
+                            <p><strong>اسم الشهيد:</strong> ${record.martyrName}</p>
+                            ${record.notes ? `<p><strong>ملاحظات:</strong> ${record.notes}</p>` : ''}
+                            <p class="created-at">تاريخ الإنشاء: ${record.createdAt}</p>
+                        </div>
+                        <div class="record-actions">
+                            <button class="btn-warning" onclick="editRecord(${record.id})">✏️ تعديل</button>
+                            <button class="btn-danger" onclick="deleteRecord(${record.id})">🗑️ حذف</button>
+                        </div>
+                    </div>
+                `).join('');
+                resultsSection.style.display = 'block';
+            } else {
+                searchResults.innerHTML = '<p class="no-results">لا توجد نتائج للبحث المحدد</p>';
+                resultsSection.style.display = 'block';
+            }
+        }
+
+        function displayRecords() {
+            const recordsDisplay = document.getElementById('recordsDisplay');
+            
+            if (records.length === 0) {
+                recordsDisplay.innerHTML = '<p class="no-records">لا توجد سجلات محفوظة</p>';
+                return;
+            }
+            
+            recordsDisplay.innerHTML = records.map(record => `
+                <div class="record-item">
+                    <div class="record-header">
+                        <h4>${record.name}</h4>
+                        <span class="status-badge status-${record.status.replace(' ', '-')}">${record.status}</span>
+                    </div>
+                    <div class="record-details">
+                        <p><strong>تاريخ التقديم:</strong> ${record.submitDate}</p>
+                        <p><strong>رقم القرار:</strong> ${record.decisionNumber}</p>
+                        <p><strong>اسم الشهيد:</strong> ${record.martyrName}</p>
+                        ${record.notes ? `<p><strong>ملاحظات:</strong> ${record.notes}</p>` : ''}
+                        <p class="created-at">تاريخ الإنشاء: ${record.createdAt}</p>
+                    </div>
+                    <div class="record-actions">
+                        <button class="btn-warning" onclick="editRecord(${record.id})">✏️ تعديل</button>
+                        <button class="btn-danger" onclick="deleteRecord(${record.id})">🗑️ حذف</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deleteRecord(id) {
+            if (confirm('هل أنت متأكد من حذف هذا السجل؟')) {
+                records = records.filter(record => record.id !== id);
+                saveRecords();
+                displayRecords();
+                // Update search results if visible
+                const resultsSection = document.getElementById('resultsSection');
+                if (resultsSection.style.display !== 'none') {
+                    searchRecords();
+                }
+            }
+        }
+
+        function editRecord(id) {
+            const record = records.find(r => r.id === id);
+            if (record) {
+                const newName = prompt('الاسم الجديد:', record.name);
+                if (newName !== null && newName.trim()) {
+                    record.name = newName.trim();
+                    saveRecords();
+                    displayRecords();
+                    // Update search results if visible
+                    const resultsSection = document.getElementById('resultsSection');
+                    if (resultsSection.style.display !== 'none') {
+                        searchRecords();
+                    }
+                }
+            }
+        }
+
+        function exportRecords() {
+            if (records.length === 0) {
+                alert('لا توجد سجلات للتصدير');
+                return;
+            }
+            
+            const csvContent = "data:text/csv;charset=utf-8," 
+                + "الاسم,الحالة,تاريخ التقديم,رقم القرار,اسم الشهيد,الملاحظات,تاريخ الإنشاء\n"
+                + records.map(record => 
+                    `"${record.name}","${record.status}","${record.submitDate}","${record.decisionNumber}","${record.martyrName}","${record.notes || ''}","${record.createdAt}"`
+                ).join('\n');
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            link.setAttribute('download', `سجلات_الاراضي_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function saveRecords() {
+            // In a real application, this would save to a database
+            // For now, we'll use localStorage
+            try {
+                localStorage.setItem('martyrsLandRecords', JSON.stringify(records));
+            } catch (e) {
+                console.log('Cannot save to localStorage');
+            }
+        }
+
+        function loadRecords() {
+            try {
+                const savedRecords = localStorage.getItem('martyrsLandRecords');
+                if (savedRecords) {
+                    records = JSON.parse(savedRecords);
+                }
+            } catch (e) {
+                console.log('Cannot load from localStorage');
+                records = [];
+            }
+        }
+
+        // Add search on Enter key press
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchRecords();
+            }
+        });
+    </script>
+</body>
+</html>
